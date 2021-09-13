@@ -2,6 +2,8 @@ package com.example.stopwatch
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.SystemClock
+import android.os.SystemClock.*
 import android.util.Log
 import android.widget.Button
 import android.widget.Chronometer
@@ -23,12 +25,15 @@ class MainActivity : AppCompatActivity() {
         wireWidgets()
 
         startstop.setOnClickListener() {
+            var lastPause: Long = elapsedRealtime()
             if(!isTimerRunning) {
+                clock.base = clock.base + elapsedRealtime() - lastPause
                 clock.start()
                 isTimerRunning = true
             }
             else {
                 clock.stop()
+                lastPause = elapsedRealtime()
                 isTimerRunning = false
             }
         }
@@ -40,6 +45,7 @@ class MainActivity : AppCompatActivity() {
 
     fun wireWidgets() {
         clock = findViewById(R.id.chronometer_main_stopwatch)
+        clock.base = elapsedRealtime()
         startstop = findViewById(R.id.button_start)
         reset = findViewById(R.id.button_main_reset)
     }
