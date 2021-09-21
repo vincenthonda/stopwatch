@@ -1,10 +1,7 @@
 package com.example.stopwatch
 
-import android.net.wifi.rtt.CivicLocationKeys
-import android.nfc.Tag
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.SystemClock
 import android.os.SystemClock.*
 import android.util.Log
 import android.widget.Button
@@ -15,29 +12,39 @@ class MainActivity : AppCompatActivity() {
     lateinit var startstop: Button
     lateinit var reset: Button
     var isTimerRunning: Boolean = false
-    var lastPause = 0L
-    val TAG = "MainActivity"
-    val BUNDLE_DISPLAYED_TIME = "displayed time"
+    var displayedTime = 0L
+
+
+    companion object {
+        val TAG = "MainActivity"
+        val BUNDLE_DISPLAYED_TIME = "displayed time"
+        val BUNDLE_IS_RUNNING = "isRunning"
+    }
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+
         wireWidgets()
-        lastPause = savedInstanceState?.getLong(BUNDLE_DISPLAYED_TIME) ?: 0L
-        isTimerRunning = savedInstanceState?.getBoolean(BUNDLE_DISPLAYED_TIME) ?: false
+        displayedTime = savedInstanceState?.getLong(BUNDLE_DISPLAYED_TIME) ?: 0L
+        isTimerRunning = savedInstanceState?.getBoolean(BUNDLE_IS_RUNNING) ?: false
+        clock.base = elapsedRealtime() - displayedTime
         if(isTimerRunning) {
+           // clock.base = displayedTime   // i don't think this line is correct. is the base the display?
             clock.start()
+            startstop.text = "STOP"
+            // update the button to say stop because that doesn't happen here on rotate
         }
 
         startstop.setOnClickListener() {
             if (isTimerRunning) {
-                lastPause = elapsedRealtime() - clock.base
+                updateLastPause()
                 clock.stop()
                 startstop.text = "START"
             } else {
-                clock.base = elapsedRealtime() - lastPause
+                clock.base = elapsedRealtime() - displayedTime
                 clock.start()
                 startstop.text = "STOP"
             }
@@ -48,21 +55,22 @@ class MainActivity : AppCompatActivity() {
             if(isTimerRunning) {
                 clock.stop()
             }
-            lastPause = 0L
-            clock.base = elapsedRealtime()
+            displayedTime = 0L
+            clock.base = displayedTime
         }
     }
 
     fun updateLastPause() {
         if(isTimerRunning) {
-            lastPause = SystemClock.elapsedRealtime() - clock.base
+            displayedTime = elapsedRealtime() - clock.base
         }
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         updateLastPause()
-        outState.putLong(BUNDLE_DISPLAYED_TIME, lastPause)
+        outState.putLong(BUNDLE_DISPLAYED_TIME, displayedTime)
+        outState.putBoolean(BUNDLE_IS_RUNNING, isTimerRunning)
     }
 
 
